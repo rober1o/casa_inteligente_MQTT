@@ -1,0 +1,8 @@
+# Ignorar a pasta de build
+build/
+
+# Ignorar a pasta .vscode
+.vscode/
+
+# Ignorar o arquivo pico_sdk_import.cmake
+pico_sdk_import.cmake
