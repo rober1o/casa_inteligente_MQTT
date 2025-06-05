@@ -1,27 +1,51 @@
-Objetivo:
+# CASA INTELIGENTE COM MQTT
 
-- O Raspberry Pi Pico W deve se conectar a um servidor MQTT (também conhecido como broker) para enviar e receber mensagens. 
+Este projeto propõe o desenvolvimento de um sistema de automação residencial com controle remoto de dispositivos como luzes, alarmes e portas, utilizando o protocolo MQTT. A solução adota uma arquitetura leve, eficiente e orientada a eventos, promovendo comunicação rápida e confiável entre os dispositivos.
 
-- Conexão ao broker: o cliente se conecta ao servidor MQTT usando o protocolo MQTT.
+## Componentes Utilizados
 
-- Autenticação: o cliente fornecerá credenciais de autenticação, como nome de usuário e senha, para se conectar ao broker.
 
-* Publicação de mensagens:
+1. **Botão Pushbutton**
+2. **Display OLED 1306**
+3. **Buzzer**
+4. **Matriz de LED 5x5 WS2812** 
+5. **Led RGB**
+6. **Modulo WIFI (CYW4)**
+7. **Jumpers**
+8. **Servo Motor**
+9. **Protoboard**
+10. **Fonte de alimentação externa 5v**
 
-- Definição do tópico: o cliente define um tópico (ou assunto) para a mensagem que deseja publicar. 
+## Funcionalidade
 
-Tópico: /temperature
+O sistema permite o controle remoto, via aplicativo IoT MQTT Panel, das seguintes funcionalidades:
 
-- Publicação da mensagem: o cliente publica a mensagem no tópico definido.
+**Ligar/Desligar a lâmpada da sala**
 
-Neste caso, será publicado o valor processado para o sensor de temperatura do RP2040.
+**Ligar/Desligar a lâmpada do quarto**
 
-* Inscrição em tópicos:
+**Abrir/Fechar a porta**
 
-- Inscrição: o cliente se inscreve em um ou mais tópicos para receber mensagens publicadas nesses tópicos.
+**Ativar/Desativar o alarme**
 
-Tópico inscrito: /led
+**Ativar/Desativar o modo viagem**
 
-- Recebimento de mensagens: o cliente recebe as mensagens publicadas nos tópicos em que se inscreveu.
+**Visualizar gráfico de temperatura ambiente em tempo real**
 
-Neste caso, será obtido o valor do estado do LED presente no microcontrolador – on ou off.
+Ao iniciar o sistema pela primeira vez, é necessário configurar a rede Wi-Fi (SSID e senha). É recomendado ter o Termux instalado e configurado no dispositivo Android, com o Mosquitto como broker MQTT local.
+
+Após a conexão Wi-Fi, o endereço IP será exibido via UART, permitindo o acesso à interface web por meio desse IP.
+
+### Como Usar
+
+#### Usando a BitDogLab
+
+- Clone este repositório: git clone https://github.com/rober1o/casa_inteligente_MQTT.git;
+- Usando a extensão Raspberry Pi Pico importar o projeto;
+- Ajuste a rede wifi e senha 
+- Compilar o projeto;
+- Plugar a BitDogLab usando um cabo apropriado
+
+## Demonstração
+<!-- TODO: adicionar link do vídeo -->
+Vídeo demonstrando as funcionalidades da solução implementada: [Demonstração](https://youtu.be/4Z0IVPpOc64)

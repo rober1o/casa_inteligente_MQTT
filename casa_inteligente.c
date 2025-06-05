@@ -105,7 +105,7 @@ int main(void)
     {
         cyw43_arch_poll();
         cyw43_arch_wait_for_work_until(make_timeout_time_ms(10000));
-        monitorar();
+        monitorar(); // verifica necessidade de soar o alarme ou não, além de atualizar o display
         sleep_ms(100);
     }
 
@@ -137,13 +137,13 @@ void inicializar_leds()
 
 void inicializar_sensor_temperatura()
 {
-    // Inicializa o conversor ADC
+    // Inicializa o ADC
     adc_init();
     adc_set_temp_sensor_enabled(true);
     adc_select_input(4);
 }
 
-void incializar_servo_motor()
+void incializar_servo_motor() // inicializa o pwm do servo motor
 {
     gpio_set_function(SERVO_MOTOR_PIN, GPIO_FUNC_PWM);
 
@@ -182,14 +182,14 @@ void inicializar_display_i2c()
     // Escreve texto
     ssd1306_fill(&ssd, false);                      // limpa o display
     ssd1306_rect(&ssd, 3, 3, 122, 60, true, false); // Moldura
-    ssd1306_draw_string(&ssd, "ALARME: ON", 20, 30);
+    ssd1306_draw_string(&ssd, "INICIANDO...", 20, 30);
     ssd1306_send_data(&ssd); // Envia os dados para o display
 
     // Envia os dados para o display
     ssd1306_send_data(&ssd);
 }
 
-void inicializar_pwm_buzzer()
+void inicializar_pwm_buzzer() // inicializa pwm do buzzer
 {
     gpio_set_function(BUZZER_PIN, GPIO_FUNC_PWM);
     uint slice_num = pwm_gpio_to_slice_num(BUZZER_PIN);
@@ -204,7 +204,7 @@ void inicializar_pwm_buzzer()
 //              FUNÇÕES AUXILIARES DO SISTEMA
 // ========================================================
 
-void desenha_fig(uint32_t *_matriz, uint8_t _intensidade, PIO pio, uint sm) // FUNÇÃO PARA DESENHAR O SEMAFORO NA MATRIZ
+void desenha_fig(uint32_t *_matriz, uint8_t _intensidade, PIO pio, uint sm) // FUNÇÃO DESENHAR A LAMPADA DA SALA
 {
     uint32_t pixel = 0;
     uint8_t r, g, b;
@@ -271,7 +271,10 @@ void atualizar_display() // Atualizar as informações do display
     // PRIORIDADE 1: Alarme disparado (sobrepõe tudo, inclusive modo viagem)
     if (alarme_disparado)
     {
-        ssd1306_draw_string(&ssd, "ALERTA!!", 40, 30);
+        ssd1306_fill(&ssd, false);                      // limpa o display
+        ssd1306_rect(&ssd, 3, 3, 122, 60, true, false); // Moldura
+        ssd1306_draw_string(&ssd, "ALERTA", 35, 30);
+        ssd1306_send_data(&ssd); // Envia os dados para o display
     }
     // PRIORIDADE 2: Modo viagem (somente aparece se o alarme NÃO estiver disparado)
     else if (modo_viagem)
@@ -289,14 +292,14 @@ void atualizar_display() // Atualizar as informações do display
         {
             ssd1306_fill(&ssd, false);                      // limpa o display
             ssd1306_rect(&ssd, 3, 3, 122, 60, true, false); // Moldura
-            ssd1306_draw_string(&ssd, "ALARME: ON", 20, 30);
+            ssd1306_draw_string(&ssd, "ALARME ON", 20, 30);
             ssd1306_send_data(&ssd); // Envia os dados para o display
         }
         else
         {
-            ssd1306_fill(&ssd, true);                       // limpa o display
-            ssd1306_rect(&ssd, 3, 3, 122, 60, false, true); // Moldura
-            ssd1306_draw_string(&ssd, "ALARME: OFF", 20, 30);
+            ssd1306_fill(&ssd, false);                      // limpa o display
+            ssd1306_rect(&ssd, 3, 3, 122, 60, true, false); // Moldura
+            ssd1306_draw_string(&ssd, "ALARME OFF", 20, 30);
             ssd1306_send_data(&ssd); // Envia os dados para o display
         }
     }
@@ -316,21 +319,19 @@ void parar_tocar_buzzer()
     pwm_set_enabled(slice_num, false);
 }
 
-void monitorar()
+void monitorar() // FUNÇÃO PARA MONITORAMENTO DOS ALARMES DA CASA
 {
     // Dispara o alarme se ainda não foi disparado e condição é verdadeira
     if (!alarme_disparado && ((alarme && porta_open) ||
                               (modo_viagem && (lampada_sala || lampada_quarto || porta_open))))
     {
         alarme_disparado = true;
-        atualizar_display();
     }
 
     // Se o alarme estiver desligado e o modo viagem também, resetar
     if (!alarme && !modo_viagem)
     {
         alarme_disparado = false;
-        atualizar_display();
     }
 
     atualizar_display();
@@ -349,7 +350,7 @@ void monitorar()
 //            FUNÇÕES DE TRATAMENTO DOS CALLBACKS
 // ========================================================
 
-// Controle do LAMPADA SALA
+// CONTROLE DA LAMPADA DA SALA
 static void controle_lampada_sala(MQTT_CLIENT_DATA_T *state, bool on)
 {
     // Publish state on /state topic and on/off led board
@@ -368,6 +369,7 @@ static void controle_lampada_sala(MQTT_CLIENT_DATA_T *state, bool on)
     mqtt_publish(state->mqtt_client_inst, full_topic(state, "/lampada_sala/state"), message, strlen(message), MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
 }
 
+// CONTROLE DA LAMPADA DO QUARTO
 static void controle_lampada_quarto(MQTT_CLIENT_DATA_T *state, bool on)
 {
     if (on)
@@ -387,7 +389,7 @@ static void controle_lampada_quarto(MQTT_CLIENT_DATA_T *state, bool on)
     const char *message = on ? "On" : "Off";
     mqtt_publish(state->mqtt_client_inst, full_topic(state, "/lampada_quarto/state"), message, strlen(message), MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
 }
-
+// CONTROLE DA PORTA
 static void controle_porta(MQTT_CLIENT_DATA_T *state, bool on)
 {
     porta_open = !porta_open; // alterna estado
@@ -405,6 +407,7 @@ static void controle_porta(MQTT_CLIENT_DATA_T *state, bool on)
     mqtt_publish(state->mqtt_client_inst, full_topic(state, "/porta/state"), message, strlen(message), MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
 }
 
+// CONTROLE DO ALARME
 static void controle_alarme(MQTT_CLIENT_DATA_T *state, bool on)
 {
     if (on)
@@ -420,7 +423,7 @@ static void controle_alarme(MQTT_CLIENT_DATA_T *state, bool on)
     const char *message = on ? "On" : "Off";
     mqtt_publish(state->mqtt_client_inst, full_topic(state, "/alarme/state"), message, strlen(message), MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
 }
-
+//  CONTROLE DO MODO VIAGEM
 static void controle_modo_viagem(MQTT_CLIENT_DATA_T *state, bool on)
 {
     if (on)
@@ -434,7 +437,7 @@ static void controle_modo_viagem(MQTT_CLIENT_DATA_T *state, bool on)
         uint channel = pwm_gpio_to_channel(SERVO_MOTOR_PIN);
         pwm_set_chan_level(slice_num, channel, SERVO_MIN);
 
-        // Publicar estados atualizados no modo viagem
+        // Publicar estados atualizados no modo viagem, permitindo o IoT MQTT PANEL atualizar os switch
         mqtt_publish(state->mqtt_client_inst, full_topic(state, "/lampada_quarto/state"), "off", 3, MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
         mqtt_publish(state->mqtt_client_inst, full_topic(state, "/lampada_sala/state"), "off", 3, MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
         mqtt_publish(state->mqtt_client_inst, full_topic(state, "/porta/state"), "fechada", 7, MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);

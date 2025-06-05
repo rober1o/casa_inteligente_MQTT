@@ -33,11 +33,11 @@
 //  DEFINIÇÕES (DEFINES & CONST)
 // ============================
 
-#define WIFI_SSID "BORGES"          // Substitua pelo nome da sua rede Wi-Fi
-#define WIFI_PASSWORD "gomugomu"    // Substitua pela senha da sua rede Wi-Fi
-#define MQTT_SERVER "192.168.1.153" // Substitua pelo endereço do host - broket MQTT: Ex: 192.168.1.107
-#define MQTT_USERNAME "roberto"     // Substitua pelo nome da host MQTT - Username
-#define MQTT_PASSWORD "embarcatech" // Substitua pelo Password da host MQTT - credencial de acesso - caso exista
+#define WIFI_SSID "SUA_REDE"          // Substitua pelo nome da sua rede Wi-Fi
+#define WIFI_PASSWORD "SUA_SENHA"    // Substitua pela senha da sua rede Wi-Fi
+#define MQTT_SERVER "SEU_IP" // Substitua pelo endereço do host - broket MQTT: Ex: 192.168.1.107
+#define MQTT_USERNAME "SEU_HOST"     // Substitua pelo nome da host MQTT - Username
+#define MQTT_PASSWORD "SUA_SENHA" // Substitua pelo Password da host MQTT - credencial de acesso - caso exista
 
 // Definição da escala de temperatura
 #ifndef TEMPERATURE_UNITS
@@ -202,6 +202,8 @@ void configurar_matriz_leds();
 void inicializar_display_i2c();
 void inicializar_pwm_buzzer();
 void inicializar_sensor_temperatura();
+
+//funões auxiliares para o sistema
 void atualizar_display();
 void monitorar();
 void parar_tocar_buzzer();
